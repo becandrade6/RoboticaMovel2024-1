@@ -1,0 +1,82 @@
+autonomia: capacidade de executar determinadas ações sem
+necessidade de intervenção humana
+
+graus de autonomia:
+    Teleoperação -> 0% (comandando remotamente)
+    Controle compartilhado -> 50% (alguns comandos) (cadeira de rodas que nao coloca em perigo)
+    Autonomia plena -> 100% (robo de limpeza)
+
+Podem se ajudar por:
+    Aprendizado de máquina
+    Cooperação
+
+Um robô móvel é estruturado em subsistemas integrados:
+    Tração/Propulsão: locomoção do robô
+    Sensoriamento: medir grandezas físicas
+    Atuação: mexer no ambiente
+    Processamento: computação e execução dos sistemas de software
+    Comunicação: responsável plo tráfego de informações e pela comunicação com o mundo exterior
+    Alimentação: fornecer energia aos demais subsistemas
+
+Subsistema de Tração:
+    Rodas
+    Pernas
+    Esteiras
+    Rastejante, saltitantes, combinações dos demais...
+
+Conceitos importantes !!!:
+    Holonomia:
+        trata das restrições de movimento que um robô possui
+        Se um robô não possui restrições de movimento, é dito holonômico (omnidirecional)
+
+    Estabilidade estática: 
+        capacidade de um veículo manter-se estável enquanto parado
+    
+    Tração diferencial:
+        Possuem dois motores independentes para o controle 
+        dos movimentos de cada uma das duas rodas
+
+Subsistema de Sensoriamento:
+    Proprioceptivos:
+        medem grandezas internas
+    Exteroceptivos:
+        medem grandezas do ambiente como distâncias, luminosidade...
+    Ativos:
+        precisam de energia para medir algo
+    Passivos:
+        não precisam de energia para medir algo
+    
+    ACURÁCIA:
+        conceito ligado à correspondência com a realidade.
+        Se diversas medidas de um mesmo estado possuem concordância com
+        a realidade daquele estado, o sensor é dito acurado.
+    
+    PRECISÃO:
+        conceito ligado à repetitividade coerente de medidas de um sensor.
+        Se diversas medidas de um mesmo estado estacionário possuem concordância
+        o sensor é dito preciso
+
+Conceitos importantes!!!:
+    Erros determinísticos:
+        são causados por fatores que, em teoria, podem ser modelados
+        e corrigidos por calibrações. (pneus descalibrados, hélices tamanhos distintos)
+    Erros não-determinísticos:
+        são de natureza aleatória, e não podem ser modelados ou preditos por modelos deterministicos
+        Devem ser tratados por meio de análises estocásticas e modelos estocásticos
+
+Software para robôs:
+    ROS:
+        framework onde cada subsistema do robô possui um ou mais servidores (service nodes).
+        Clientes (client nodes) acessam os servidores por meio de um protocolo de RPC (Remote Procedure Call)
+
+
+Alguns problemas centrais em rob. movel:
+    Modelar o robo: modelos cinematico e dinamico e seus Erros
+    Modelar os sensores do robo com os erros de medida
+    Modelar o ambiente
+    Planejar um caminho para o robo
+    Percorrer o caminho planejado
+    Localizar o robo no ambiente, dado o seu mapa
+    Levantar o mapa do ambiente e simultaneamente localizar o robo neste mapa (SLAM: simultaneous
+        localization and mapping)
+    
