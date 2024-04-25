@@ -12,7 +12,7 @@ porta_serial = '/dev/ttyUSB0'  # Substitua pelo nome da porta serial correta
 
 esp =  serial.Serial(
     port=porta_serial,
-    baudrate=115200,
+    baudrate=9600,
     bytesize=serial.EIGHTBITS,
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE
@@ -44,7 +44,7 @@ try:
     encoder_roda1 = esp.readline().decode().strip()
     encoder_roda2 = esp.readline().decode().strip()
     header = "valor_entrada, encoder_rodaEsquerda, encoder_rodaDireita, dt"
-    np.savetxt('/home/levty/Documentos/UFJF/9_Periodo/Lab Robotica Movel/Aula05_18_04/t100a01_vFinal.csv', d, delimiter=',', header=header)
+    np.savetxt('t100a08.csv', d, delimiter=',', header=header)
     esp.close()
 except Exception as e:
     esp.close()

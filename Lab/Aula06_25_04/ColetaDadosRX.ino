@@ -24,7 +24,7 @@ int MTA = 0;
 int MTB = 0;
 
 long tempo = 0;
-int aux = 0;
+
 int dt = 100;
 
 PololuMagneticEncoder encoders;
@@ -111,21 +111,22 @@ void setup() {
 
 void loop () {
   // Rotina executada quando um dado é recebido
-  if(available)
-  {
-    available = false;
-    //verificar se temos que fazer estrutura de controle do dt igual no ColetaDados.ino
-    encoderReadings.PWM = dado;
-    encoderReadings.esquerdo = encoders.getCountsAndResetEncoderLeft();
-    encoderReadings.direito = encoders.getCountsAndResetEncoderRight();
-    MTA = dado;
-    MTB = dado;
-    analogWrite(PWMA, MTA);
-    analogWrite(PWMB, MTB);
-
-    // Send message via ESP-NOW
-    esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &encoderReadings, sizeof(encoderReadings));
-    
+  if(millis() - tempo >= dt){
+    tempo = millis();
+    if(available)
+    {
+      available = false;
+      //verificar se temos que fazer estrutura de controle do dt igual no ColetaDados.ino
+      encoderReadings.PWM = dado;
+      encoderReadings.esquerdo = encoders.getCountsAndResetEncoderLeft();
+      encoderReadings.direito = encoders.getCountsAndResetEncoderRight();
+      MTA = dado;
+      MTB = dado;
+      analogWrite(PWMA, MTA);
+      analogWrite(PWMB, MTB);
+        // Send message via ESP-NOW
+      esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &encoderReadings, sizeof(encoderReadings));
+    }
   }
 }
 
