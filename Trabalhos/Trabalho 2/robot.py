@@ -122,16 +122,17 @@ class Robot:
     
 
     def plot(self,values,pathToFigure):
-        #adaptar para perfumaria a partir do codigo do olivi
         # values = [ [x1, y1, theta1], [x2, y2, theta2], ...]
         x_values = [value[0] for value in values]
         y_values = [value[1] for value in values]
         theta_values = [value[2] for value in values]
+        radius = max(max(x_values) - min(x_values), max(y_values) - min(y_values)) / 2
+        plt.figure(figsize=(10, 8))  
         plt.plot(x_values, y_values)
         plt.quiver(x_values, y_values, [math.cos(theta) for theta in theta_values], [math.sin(theta) for theta in theta_values])
-        plt.xlabel('X')
-        plt.ylabel('Y')
-        plt.title('Robot Trajectory')
+        plt.xlabel('Eixo X')
+        plt.ylabel('Eixo Y')
+        plt.title('Trajetória do Robô com raio simulado de : ' + str(radius), weight='bold')
         plt.grid()
         plt.savefig(pathToFigure)
         plt.close()
