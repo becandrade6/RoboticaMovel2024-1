@@ -129,15 +129,11 @@ class Robot:
         self.plot(values = history,pathToFigure=pathToFigure)
     
     
-    def proportionalControllerSimulation(self,dt,maxTime,pathToFigure,goals,parameters):
-        Krho = parameters['Krho']
-        Kalpha = parameters['Kalpha']
-        Kbeta = parameters['Kbeta']
+    def proportionalControllerSimulation(self,dt,pathToFigure,goals,parameters):
         delta1 = parameters['delta1']
         delta2 = parameters['delta2']
         history = [self.get_position()]
         for goal in goals:
-            position = self.get_position()
             rho, gamma, alpha, beta = self.calculateParametersToGoal(goal)
             while (rho > delta1) and (abs(alpha) > delta2) and (abs(beta) > delta2):
                 v, w = self.calculateControlSpeeds(goal,parameters)
