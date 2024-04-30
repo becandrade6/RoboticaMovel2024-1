@@ -135,6 +135,7 @@ class Robot:
         Kbeta = parameters['Kbeta']
         delta1 = parameters['delta1']
         delta2 = parameters['delta2']
+        history = [self.get_position()]
         for goal in goals:
             position = self.get_position()
             rho, gamma, alpha, beta = self.calculateParametersToGoal(goal)
@@ -142,7 +143,9 @@ class Robot:
                 v, w = self.calculateControlSpeeds(goal,parameters)
                 self.set_speeds(v, w)
                 self.differentialMovement(dt)
+                history.append(self.get_position())
                 rho, gamma, alpha, beta = self.calculateParametersToGoal(goal)
+        self.plot(values = history,pathToFigure=pathToFigure)
 
     def adjustAngle(self,angle):
         angle = angle % (2 * math.pi)
