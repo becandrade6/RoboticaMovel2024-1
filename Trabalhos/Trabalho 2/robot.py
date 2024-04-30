@@ -50,13 +50,21 @@ class Robot:
     # def get_geometry(self):
     #     return [self.body, self.leftWheel, self.rightWheel]
 
+    def getCenterSpeeds(self):
+        return self.linearVelocity, self.angularVelocity
+    
+    def getWheelSpeeds(self):
+        return self.leftWheelAngularSpeed, self.rightWheelAngularSpeed
+
     def set_wheel_speeds(self, leftWheelAngularSpeed, rightWheelAngularSpeed):
         self.leftWheelAngularSpeed = leftWheelAngularSpeed
         self.rightWheelAngularSpeed = rightWheelAngularSpeed
+        self.calculateVelocityFromWheelSpeeds()
 
     def set_speeds(self, linearVelocity, angularVelocity):
         self.linearVelocity = linearVelocity
         self.angularVelocity = angularVelocity
+        self.calculateWheelSpeedsFromVelocity()
 
     def calculateWheelSpeedsFromVelocity(self):
         self.rightWheelAngularSpeed = (self.linearVelocity + self.angularVelocity * self.wheelDistanceToCenter)/(self.wheelRadius)
@@ -70,11 +78,11 @@ class Robot:
         return v, omega
 
     def differentialMovement(self, dt):
-        v, omega = self.calculateVelocityFromWheelSpeeds()
+        v, omega = self.getCenterSpeeds()
         self.x += v * dt * math.cos(self.theta)
         self.y += v * dt * math.sin(self.theta)
         self.theta += omega * dt
-    
+
     def incrementalMovement(self, dt):
         v, omega = self.calculateVelocityFromWheelSpeeds()
         deltaS = v * dt
@@ -120,6 +128,53 @@ class Robot:
             history.append(self.get_position())
         self.plot(values = history,pathToFigure=pathToFigure)
     
+    
+    def proportionalControllerSimulation(self,dt,maxTime,pathToFigure,goals,parameters):
+        Krho = parameters['Krho']
+        Kalpha = parameters['Kalpha']
+        Kbeta = parameters['Kbeta']
+        delta1 = parameters['delta1']
+        delta2 = parameters['delta2']
+        for goal in goals:
+            position = self.get_position()
+            rho, gamma, alpha, beta = self.calculateParametersToGoal(goal)
+            while (rho > delta1) and (abs(alpha) > delta2) and (abs(beta) > delta2):
+                v, w = self.calculateControlSpeeds(goal,parameters)
+                self.set_speeds(v, w)
+                self.differentialMovement(dt)
+                rho, gamma, alpha, beta = self.calculateParametersToGoal(goal)
+
+    def adjustAngle(self,angle):
+        angle = angle % (2 * math.pi)
+        if angle > math.pi:
+            angle  = angle - 2 * math.pi
+        return angle
+    
+    def calculatePositionDifference(self,goal):
+        position = self.get_position()
+        dX = goal[0] - position[0]
+        dY = goal[1] - position[1]
+        dTheta = goal[2] - position[2]
+        return dX, dY, dTheta
+
+    def calculateParametersToGoal(self,goal):
+        dX, dY, dTheta = self.calculatePositionDifference(goal)
+        rho = math.sqrt(dX**2 + dY**2)
+        gamma = self.adjustAngle(math.atan2(dY,dX))
+        alpha = self.adjustAngle(gamma - self.theta)
+        beta = self.adjustAngle(goal[2] - gamma)
+        return rho, gamma, alpha, beta
+
+    def calculateControlSpeeds(self,goal,parameters):
+        Krho = parameters['Krho']
+        Kalpha = parameters['Kalpha']
+        Kbeta = parameters['Kbeta']
+        delta1 = parameters['delta1']
+        delta2 = parameters['delta2']
+        rho, gamma, alpha, beta = self.calculateParametersToGoal(goal)
+        v = Krho * rho
+        w = Kalpha * alpha + Kbeta * beta
+        return v, w
 
     def plot(self,values,pathToFigure):
         # values = [ [x1, y1, theta1], [x2, y2, theta2], ...]
