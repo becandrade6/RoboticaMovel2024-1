@@ -31,7 +31,6 @@ try:
     d = []
     for valor in u:
         enviar_comando(valor)
-        time.sleep(dt)
         valor_entrada = esp.readline().decode().strip()
         encoder_rodaEsquerda = esp.readline().decode().strip()
         encoder_rodaDireita = esp.readline().decode().strip()
@@ -39,7 +38,6 @@ try:
         print(valor,valor_entrada, encoder_rodaEsquerda, encoder_rodaDireita, dt)
         d.append([int(valor_entrada), int(encoder_rodaEsquerda), int(encoder_rodaDireita),dt])
     enviar_comando(0)
-    time.sleep(dt)
     valor_entrada = esp.readline().decode().strip()
     encoder_roda1 = esp.readline().decode().strip()
     encoder_roda2 = esp.readline().decode().strip()
