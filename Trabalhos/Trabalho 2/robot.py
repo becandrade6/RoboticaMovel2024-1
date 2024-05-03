@@ -1,16 +1,6 @@
 import matplotlib.pyplot as plt
 import math
 import numpy as np
-#raio da roda
-#distancia do centro a roda
-#posicao x, y, theta iniciais
-#velocidade angular da roda esquerda e direita iniciais
-
-#geometry = {
-#   'body': [[],[],[]]
-#   'leftWheel': [[],[],[]]
-#   'rightWheel': [[],[],[]]
-#}
 
 class Robot:
     def __init__(self, wheelRadius = 0 , wheelDistanceToCenter = 1,
@@ -39,16 +29,8 @@ class Robot:
         self.y = y
         self.theta = theta
     
-    # def set_geometry(self, body, leftWheel, rightWheel):
-    #     self.body = body
-    #     self.leftWheel = leftWheel
-    #     self.rightWheel = rightWheel
-
     def get_position(self):
         return [self.x, self.y, self.theta]
-    
-    # def get_geometry(self):
-    #     return [self.body, self.leftWheel, self.rightWheel]
 
     def getCenterSpeeds(self):
         return self.linearVelocity, self.angularVelocity
@@ -89,14 +71,7 @@ class Robot:
         deltaTheta = omega * dt
         deltaP = [deltaS * math.cos(self.theta + deltaTheta/2), deltaS * math.sin(self.theta + deltaTheta/2), deltaTheta]
         self.set_position(self.x + deltaP[0], self.y + deltaP[1], self.theta + deltaP[2])
-
-    # def change_geometry(self, body, leftWheel, rightWheel):
-    #     newBody = self.translation2D(self.rotation2D(body,self.theta), self.x, self.y) 
-    #     newLeftWheel = self.translation2D(self.rotation2D(leftWheel,self.theta), self.x, self.y)
-    #     newRightWheel = self.translation2D(self.rotation2D(rightWheel,self.theta), self.x, self.y)
-    #     self.set_geometry(newBody, newLeftWheel, newRightWheel)
         
-
     def differentialSimulation(self, dt, maxTime,pathToFigure):
         time = 0
         history = [self.get_position()]
@@ -104,20 +79,7 @@ class Robot:
             self.differentialMovement(dt)
             time += dt
             history.append(self.get_position())
-        self.plot(values = history,pathToFigure=pathToFigure)
-    
-    # def differentialSimulationWithGeometry(self,dt,maxTime,pathToFigure):
-    #     time = 0
-    #     body, leftWheel, rightWheel = self.get_geometry()
-    #     historyGeometry = [[body, leftWheel, rightWheel]]
-    #     historyPosition = [self.get_position()]
-    #     while time <= maxTime:
-    #         self.differentialMovement(dt)
-    #         self.change_geometry(body, leftWheel, rightWheel)
-    #         time += dt
-    #         historyGeometry.append(self.get_geometry())
-    #         historyPosition.append(self.get_position())
-    #     self.plotWithGeometry(geometryValues = historyGeometry,positionValues = historyPosition,pathToFigure=pathToFigure)
+        self.plot(values = history,pathToFigure=pathToFigure,hasRadius=True)
 
     def incrementalSimulation(self,dt,maxTime,pathToFigure):
         time = 0
@@ -126,7 +88,7 @@ class Robot:
             self.incrementalMovement(dt)
             time += dt
             history.append(self.get_position())
-        self.plot(values = history,pathToFigure=pathToFigure)
+        self.plot(values = history,pathToFigure=pathToFigure,hasRadius=True)
     
     
     def proportionalControllerSimulation(self,dt,pathToFigure,goals,parameters):
@@ -134,8 +96,9 @@ class Robot:
         delta2 = parameters['delta2']
         history = [self.get_position()]
         for goal in goals:
+            deltaX, deltaY, deltaTheta = self.calculatePositionDifference(goal)
             rho, gamma, alpha, beta = self.calculateParametersToGoal(goal)
-            while (rho > delta1) and (abs(alpha) > delta2) and (abs(beta) > delta2):
+            while (abs(rho) > delta1) and (abs(deltaTheta) > delta2):
                 v, w = self.calculateControlSpeeds(goal,parameters)
                 self.set_speeds(v, w)
                 self.differentialMovement(dt)
@@ -153,7 +116,7 @@ class Robot:
         position = self.get_position()
         dX = goal[0] - position[0]
         dY = goal[1] - position[1]
-        dTheta = goal[2] - position[2]
+        dTheta = self.adjustAngle(goal[2] - position[2])
         return dX, dY, dTheta
 
     def calculateParametersToGoal(self,goal):
@@ -162,92 +125,38 @@ class Robot:
         gamma = self.adjustAngle(math.atan2(dY,dX))
         alpha = self.adjustAngle(gamma - self.theta)
         beta = self.adjustAngle(goal[2] - gamma)
+        if((-180 <= math.degrees(alpha) < -90) or (90 < math.degrees(alpha) <= 180)):
+            v,w = self.getCenterSpeeds()
+            self.set_speeds(-v,w)
+            alpha = self.adjustAngle(alpha + math.pi)
+            beta = self.adjustAngle(beta + math.pi)
         return rho, gamma, alpha, beta
 
     def calculateControlSpeeds(self,goal,parameters):
         Krho = parameters['Krho']
         Kalpha = parameters['Kalpha']
         Kbeta = parameters['Kbeta']
-        delta1 = parameters['delta1']
-        delta2 = parameters['delta2']
+        vmax = parameters['vmax']
+        wmax = parameters['wmax']
         rho, gamma, alpha, beta = self.calculateParametersToGoal(goal)
-        v = Krho * rho
-        w = Kalpha * alpha + Kbeta * beta
+        v = Krho * rho if abs(Krho * rho) < abs(vmax) else vmax
+        w = Kalpha * alpha + Kbeta * beta if abs(Kalpha * alpha + Kbeta * beta) < abs(wmax) else wmax
         return v, w
 
-    def plot(self,values,pathToFigure):
+    def plot(self,values,pathToFigure,hasRadius = False):
         # values = [ [x1, y1, theta1], [x2, y2, theta2], ...]
         x_values = [value[0] for value in values]
         y_values = [value[1] for value in values]
         theta_values = [value[2] for value in values]
-        radius = max(max(x_values) - min(x_values), max(y_values) - min(y_values)) / 2
+        
         plt.figure(figsize=(10, 8))  
         plt.plot(x_values, y_values)
         plt.quiver(x_values, y_values, [math.cos(theta) for theta in theta_values], [math.sin(theta) for theta in theta_values])
         plt.xlabel('Eixo X')
         plt.ylabel('Eixo Y')
-        plt.title('Trajetória do Robô com raio simulado de : ' + str(radius), weight='bold')
+        if(hasRadius):
+            radius = max(max(x_values) - min(x_values), max(y_values) - min(y_values)) / 2
+            plt.title('Trajetória do Robô com raio simulado de : ' + str(radius), weight='bold')
         plt.grid()
         plt.savefig(pathToFigure)
         plt.close()
-
-    # def plotWithGeometry(self,geometryValues, positionValues,pathToFigure):
-        
-    #     bodyValues = [value[0] for value in geometryValues]
-    #     leftWheelValues = [value[1] for value in geometryValues]
-    #     rightWheelValues = [value[2] for value in geometryValues]
-        
-    #     bodyValues[0] = np.array(bodyValues[0])
-    #     leftWheelValues[0] = np.array(leftWheelValues[0])
-    #     rightWheelValues[0] = np.array(rightWheelValues[0])        
-        
-    #     xBody_values = [value[0] for value in bodyValues]
-    #     yBody_values = [value[1] for value in bodyValues]
-    #     xLeftWheel_values = [value[0,:] for value in leftWheelValues]
-    #     yLeftWheel_values = [value[1,:] for value in leftWheelValues]
-    #     xRightWheel_values = [value[0,:] for value in rightWheelValues]
-    #     yRightWheel_values = [value[1,:] for value in rightWheelValues]
-
-
-    #     plt.fill(xBody_values,yBody_values, 'y')  # corpo
-    #     plt.fill(xLeftWheel_values, yLeftWheel_values, 'y')  # roda esquerda
-    #     plt.fill(xRightWheel_values, yRightWheel_values, 'y')  # roda direita
-        
-    #     xPosition_values = [value[0] for value in positionValues]
-    #     yPosition_values = [value[1] for value in positionValues]
-    #     thetaPosition_values = [value[2] for value in positionValues]
-
-    #     plt.plot(xPosition_values, yPosition_values, 'b', linewidth=1)
-
-
-    #     primeiroEixoX = []
-    #     primeiroEixoY = []
-    #     segundoEixoX = []
-    #     segundoEixoY = []
-    #     for i in range(len(xPosition_values)):
-    #         primeiroEixoX.append([xPosition_values[i], xPosition_values[i] + self.wheelDistanceToCenter * np.cos(thetaPosition_values[i] + np.pi / 2)])
-    #         primeiroEixoY.append([yPosition_values[i], yPosition_values[i] + self.wheelDistanceToCenter * np.sin(thetaPosition_values[i] + np.pi / 2)])
-    #         segundoEixoX.append([xPosition_values[i], xPosition_values[i] + self.wheelDistanceToCenter * np.cos(thetaPosition_values[i] - np.pi / 2)])
-    #         segundoEixoY.append([yPosition_values[i], yPosition_values[i] + self.wheelDistanceToCenter * np.sin(thetaPosition_values[i] - np.pi / 2)])
-
-    #     #eixo das rodas
-    #     plt.plot(primeiroEixoX,primeiroEixoY, 'k', linewidth=1.5)
-    #     plt.plot(segundoEixoX,segundoEixoY, 'k', linewidth=1.5)
-
-    #     plt.xlabel('X')
-    #     plt.ylabel('Y')
-    #     plt.title('Robot Trajectory')
-    #     plt.grid()
-    #     plt.savefig(pathToFigure)
-    #     plt.close()
-    
-    # def translation2D(self, originalFrameMatrix, deltaX, deltaY):
-    #     T = [[1, 0, deltaX], [0, 1, deltaY], [0, 0, 1]]
-    #     translatedMatrix = T @ originalFrameMatrix
-    #     return translatedMatrix
-    
-    # def rotation2D(self, originalFrameMatrix, theta):
-    #     Rz = [[math.cos(theta), -math.sin(theta), 0], [math.sin(theta), math.cos(theta), 0], [0, 0, 1]]
-    #     rotatedMatrix = np.dot(np.array(Rz),np.array(originalFrameMatrix))
-    #     return rotatedMatrix
-    
