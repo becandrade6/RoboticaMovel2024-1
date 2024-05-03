@@ -104,7 +104,8 @@ class Robot:
                 self.differentialMovement(dt)
                 history.append(self.get_position())
                 rho, gamma, alpha, beta = self.calculateParametersToGoal(goal)
-        self.plot(values = history,pathToFigure=pathToFigure)
+        goals.insert(0,(0,0,np.deg2rad(90)))
+        self.plot(values = history,pathToFigure=pathToFigure,goals=goals)
 
     def adjustAngle(self,angle):
         angle = angle % (2 * math.pi)
@@ -143,7 +144,7 @@ class Robot:
         w = Kalpha * alpha + Kbeta * beta if abs(Kalpha * alpha + Kbeta * beta) < abs(wmax) else wmax
         return v, w
 
-    def plot(self,values,pathToFigure,hasRadius = False):
+    def plot(self,values,pathToFigure,hasRadius = False,goals = None):
         # values = [ [x1, y1, theta1], [x2, y2, theta2], ...]
         x_values = [value[0] for value in values]
         y_values = [value[1] for value in values]
@@ -151,7 +152,11 @@ class Robot:
         
         plt.figure(figsize=(10, 8))  
         plt.plot(x_values, y_values)
-        plt.quiver(x_values, y_values, [math.cos(theta) for theta in theta_values], [math.sin(theta) for theta in theta_values])
+        if(goals != None):
+            for goal in goals:
+                plt.quiver(goal[0], goal[1], [math.cos(goal[2])], [math.sin(goal[2])], color='red')
+                plt.scatter(goal[0], goal[1], color='k')
+        #plt.quiver(x_values, y_values, [math.cos(theta) for theta in theta_values], [math.sin(theta) for theta in theta_values])
         plt.xlabel('Eixo X')
         plt.ylabel('Eixo Y')
         if(hasRadius):
