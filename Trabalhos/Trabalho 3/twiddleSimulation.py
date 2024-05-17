@@ -1,8 +1,8 @@
 from twiddleFunctions import twiddlePID, twiddle_para_multiplos_objetivos, plotar_trajeto
 import numpy as np
 
-objetivo = [-20,-10,np.deg2rad(45)]
+objetivo = [35,28,np.deg2rad(90)]
 
-erroObjetivo, parametros, historicoErros, historicoErros_simulacao, historicoTrajetos = twiddlePID(objetivo)
+erroObjetivo, parametros, historicoErros, melhor_trajeto = twiddlePID(objetivo)
 
-plotar_trajeto(historicoTrajetos[-1],"testeTwiddleFinal.png")
+plotar_trajeto(melhor_trajeto,"testeTwiddleFinal.png")

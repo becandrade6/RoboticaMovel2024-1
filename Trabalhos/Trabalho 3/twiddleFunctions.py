@@ -8,7 +8,7 @@ def ajusta_angulo(angulo):
         angulo  = angulo - 2 * math.pi
     return angulo
 
-def simula_processo(objetivo,ganhos_controlador,posicaoInicial = [0,0,0],
+def simula_processo(objetivo,ganhos_controlador,posicaoInicial = np.array([0,0,0],float),
                     toleranciaDistancia = 0.01, vmax = 0.25, 
                     wmax = np.deg2rad(180), dt = 0.1):
     
@@ -16,7 +16,7 @@ def simula_processo(objetivo,ganhos_controlador,posicaoInicial = [0,0,0],
     historico_erro = []
     Kp, Ki, Kd = ganhos_controlador
 
-    posicao = np.array(posicaoInicial)
+    posicao = np.array(posicaoInicial,float)
 
     #calculando parametros da reta entre o ponto de partida e objetivo
     x0, y0, theta0 = posicaoInicial
@@ -71,51 +71,55 @@ def simula_processo(objetivo,ganhos_controlador,posicaoInicial = [0,0,0],
 
         erro = abs(a*x + b*y + c)/math.sqrt(a**2 + b**2)
         historico_erro.append(erro)
-    return sum(historico_erro), historico_erro, historico_posicao
+    return np.mean(historico_erro), historico_erro, historico_posicao
 
 def twiddlePID(objetivo, posicaoInicial = [0,0,0],
-               ganhos_iniciais_controlador = np.array([0,0,0]), 
-               diferenciais_parametros = np.array([1,1,1]),
-               ksi = 0.01, delta = 0.001):
+               ganhos_iniciais_controlador = np.array([0.0,0.0,0.0],float), 
+               diferenciais_parametros = np.array([1.,1.,1.],float),
+               ksi = 0.05, delta = 0.001):
     parametros = ganhos_iniciais_controlador
     historico_erros = []
-    historico_totalErros = []
-    historico_totalTrajetos = []
-    melhor_erro, historico_erroSimulado, trajeto_simulado = simula_processo(objetivo,ganhos_iniciais_controlador)
+    #historico_totalErros = []
+    #historico_totalTrajetos = []
+    melhor_erro, _, _ = simula_processo(objetivo,ganhos_iniciais_controlador)
+    melhores_parametros = parametros
     historico_erros.append(melhor_erro)
-    historico_totalErros.append(historico_erroSimulado)
-    historico_totalTrajetos.append(trajeto_simulado)
+   # historico_totalErros.append(historico_erroSimulado)
+    #historico_totalTrajetos.append(trajeto_simulado)
     contador_iteracoes = 0
-    while sum(diferenciais_parametros) > delta:
+    while diferenciais_parametros.sum() > delta:
         contador_iteracoes += 1
 
         for i in range(len(parametros)):
             parametros[i] += diferenciais_parametros[i]
-            
-            erro, historico_erroSimulado, trajeto_simulado = simula_processo(objetivo,parametros)
+            erro, _, _ = simula_processo(objetivo,parametros)
             historico_erros.append(erro)
-            historico_totalErros.append(historico_erroSimulado)
-            historico_totalTrajetos.append(trajeto_simulado)
+           # historico_totalErros.append(historico_erroSimulado)
+            #historico_totalTrajetos.append(trajeto_simulado)
             if erro < melhor_erro:
                 melhor_erro = erro
-                diferenciais_parametros[i] *= (1 + ksi)
+                melhores_parametros = parametros
+                diferenciais_parametros[i] +=  diferenciais_parametros[i]*ksi
             else:
                 parametros[i] -= 2 * diferenciais_parametros[i]
-                erro, historico_erroSimulado, trajeto_simulado = simula_processo(objetivo,parametros)
+                erro, _, _ = simula_processo(objetivo,parametros)
                 historico_erros.append(erro)
-                historico_totalErros.append(historico_erroSimulado)
-                historico_totalTrajetos.append(trajeto_simulado)
+                #historico_totalErros.append(historico_erroSimulado)
+               # historico_totalTrajetos.append(trajeto_simulado)
                 if erro < melhor_erro:
                     melhor_erro = erro
-                    diferenciais_parametros[i] *= (1 + ksi)
+                    melhores_parametros = parametros
+                    diferenciais_parametros[i] +=  diferenciais_parametros[i]*ksi
                 else:
                     parametros[i] += diferenciais_parametros[i]
-                    diferenciais_parametros[i] *= (1 - ksi)        
+                    diferenciais_parametros[i] -=  diferenciais_parametros[i]*ksi    
         print("Rodada:", contador_iteracoes)
         print("Melhor erro:", round(melhor_erro, 4))
         print("Soma dos diferenciais:", round(sum(diferenciais_parametros), 6))
-    print("Parâmetros: P =  %.4f , I =  %.4f , D = %.4f" % (parametros[0], parametros[1], parametros[2]))
-    return melhor_erro, parametros, historico_erros, historico_totalErros, historico_totalTrajetos
+    print("Parâmetros: P =  %.4f , I =  %.4f , D = %.4f" % (melhores_parametros[0], melhores_parametros[1], melhores_parametros[2]))
+    #simular com os melhores parametros para obter novamente o melhor trajeto
+    melhor_erro, _, melhor_trajeto = simula_processo(objetivo,melhores_parametros)
+    return melhor_erro, melhores_parametros, historico_erros, melhor_trajeto
 
 def twiddle_para_multiplos_objetivos(objetivos):
     melhores_trajetos = []
@@ -159,7 +163,7 @@ def plotar_trajeto(trajeto, caminho_imagem):
     theta_trajeto = [ponto[2] for ponto in trajeto]
     
     fig, ax = plt.subplots()
-    ax.plot(x_trajeto, y_trajeto, 'b-', linewidth=2)
+    ax.plot(x_trajeto, y_trajeto, 'b-', linewidth=1)
     
     ax.plot(x_trajeto[0], y_trajeto[0], 'ko', markersize=8, fillstyle='none')
     ax.plot(x_trajeto[-1], y_trajeto[-1], 'ro', markersize=8, fillstyle='none')
@@ -169,6 +173,7 @@ def plotar_trajeto(trajeto, caminho_imagem):
     y_barra_inicial = y_trajeto[0] + comprimento_barra * np.sin(theta_trajeto[0])
     ax.plot([x_trajeto[0], x_barra_inicial], [y_trajeto[0], y_barra_inicial], 'k-', linewidth=2)
     
+    print(np.rad2deg(theta_trajeto[-1]))
     x_barra_final = x_trajeto[-1] + comprimento_barra * np.cos(theta_trajeto[-1])
     y_barra_final = y_trajeto[-1] + comprimento_barra * np.sin(theta_trajeto[-1])
     ax.plot([x_trajeto[-1], x_barra_final], [y_trajeto[-1], y_barra_final], 'r-', linewidth=2)
