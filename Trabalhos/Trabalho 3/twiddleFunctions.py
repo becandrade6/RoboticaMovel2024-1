@@ -153,8 +153,8 @@ def plotar_trajeto_e_erro(trajeto,erro,objetivo,caminho_imagem,pontoInicial = np
     ax1.plot(x_objetivo, y_objetivo, 'ko', markersize=8, fillstyle='none')
     ax1.plot(x_trajeto[-1], y_trajeto[-1], 'ro', markersize=8, fillstyle='none')
 
-    ax1.text(x_inicial + 0.1, y_inicial + 0.3, 'Start', fontsize=12)
-    ax1.text(x_objetivo + 0.1, x_objetivo + 0.3, 'Goal', fontsize=12)
+    ax1.text(x_inicial + 0.02, y_inicial + 0.03, 'Start', fontsize=10,weight='bold')
+    ax1.text(x_objetivo + 0.02, y_objetivo + 0.03, 'Goal', fontsize=10,weight='bold')
     
     comprimento_barra = 0.3
     x_barra_inicial = x_trajeto[0] + comprimento_barra * np.cos(theta_trajeto[0])

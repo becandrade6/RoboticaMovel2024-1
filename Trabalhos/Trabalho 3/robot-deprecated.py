@@ -149,7 +149,7 @@ class Robot:
         errorHistory = [bestError]
         trajectoryHistory = [firstTrajectory]
         n = len(pidParameters)
-        while sum(abs(x) for x in dp) > tolerance:
+        while sum(map(abs,dp)) > tolerance:
             for i in range(n):
                 pidParameters[i] += dp[i]
                 error, trajectory = self.pidProcessSimulation(dt,goal,pidParameters,tolerance,tMax,vMax,wMax,start)
