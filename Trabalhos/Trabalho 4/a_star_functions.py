@@ -189,13 +189,13 @@ def plotar_mapa(mapa, inicio, objetivo, trajeto, caminho=None, custo_caminho=Non
 
     # Para transformar em um mapa em centímetros onde cada quadrado tem 100cm (meio do quadrado tem 50cm)
     # Descomente as linhas abaixo:
-    cm_ticks = np.arange(-50, (tamanho + 2) * 100 - 50, 100)
-    ax.set_xticks(np.arange(0, tamanho + 2, 1))
-    ax.set_yticks(np.arange(0, tamanho + 2, 1))
-    ax.set_xticklabels(cm_ticks, fontsize=13)
-    ax.set_yticklabels(cm_ticks, fontsize=13)
-    ax.set_xlabel('X (cm)', fontsize=24)
-    ax.set_ylabel('Y (cm)', fontsize=24)
+    # cm_ticks = np.arange(-50, (tamanho + 2) * 100 - 50, 100)
+    # ax.set_xticks(np.arange(0, tamanho + 2, 1))
+    # ax.set_yticks(np.arange(0, tamanho + 2, 1))
+    # ax.set_xticklabels(cm_ticks, fontsize=13)
+    # ax.set_yticklabels(cm_ticks, fontsize=13)
+    # ax.set_xlabel('X (cm)', fontsize=24)
+    # ax.set_ylabel('Y (cm)', fontsize=24)
 
     plt.savefig(nomeFigura)
 
