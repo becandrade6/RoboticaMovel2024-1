@@ -196,6 +196,6 @@ def plotar_mapa(mapa, inicio, objetivo, trajeto, caminho=None, custo_caminho=Non
     # ax.set_yticklabels(cm_ticks, fontsize=13)
     # ax.set_xlabel('X (cm)', fontsize=24)
     # ax.set_ylabel('Y (cm)', fontsize=24)
-
-    plt.savefig(nomeFigura)
+    plt.tight_layout()
+    plt.savefig(nomeFigura,bbox_inches='tight', pad_inches=0.1)
 
